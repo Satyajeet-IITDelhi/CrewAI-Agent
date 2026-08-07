@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: your-webapp-name # <-- change to your Azure Web App name
+  AZURE_WEBAPP_NAME: crewaiagent01 # <-- change to your Azure Web App name
 
 jobs:
   deploy:
