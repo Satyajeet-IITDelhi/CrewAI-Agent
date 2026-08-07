@@ -1,0 +1,10 @@
+# [litellm] extra: required for the Groq path — CrewAI has no native Groq
+# provider and falls back to LiteLLM. Drop the extra only if you switch
+# LLM_PROVIDER to anthropic, which is native.
+crewai[litellm]>=0.86.0
+crewai-tools>=0.25.0
+firecrawl-py>=1.6.0
+python-dotenv>=1.0.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
+gunicorn>=22.0.0

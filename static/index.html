@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Research Analyst</title>
+<style>
+  :root {
+    --paper:  #eceff4;
+    --card:   #ffffff;
+    --ink:    #16182b;
+    --slate:  #5a6079;
+    --hair:   #d3d8e2;
+    --ember:  #e8541f;
+    --moss:   #1f7a6b;
+
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #101223;
+      --card:  #191c30;
+      --ink:   #e7eaf3;
+      --slate: #949ab5;
+      --hair:  #2c3049;
+      --ember: #ff6a35;
+      --moss:  #4cc0a8;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 7vh 24px 96px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+
+  /* --- masthead ------------------------------------------------------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin: 0 0 8px;
+  }
+  .standfirst {
+    color: var(--slate);
+    max-width: 52ch;
+    margin: 0 0 56px;
+  }
+
+  /* --- the hero: one enormous URL field ------------------------------- */
+  .field { margin-bottom: 28px; }
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 12px;
+  }
+  #url {
+    width: 100%;
+    border: 0;
+    background: none;
+    padding: 0 0 14px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: clamp(20px, 3.6vw, 30px);
+    letter-spacing: -.02em;
+  }
+  #url::placeholder { color: var(--hair); }
+  #url:focus { outline: none; }
+
+  /* Signature: the baseline under the URL. At rest it is a hairline that
+     thickens on focus; while running, a segment crawls along it. */
+  .rule { position: relative; height: 3px; background: var(--hair); overflow: hidden; }
+  .rule::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .35s ease;
+  }
+  #url:focus ~ .rule::before { transform: scaleX(1); }
+  .rule::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -34%;
+    width: 34%;
+    height: 100%;
+    background: var(--ember);
+    opacity: 0;
+  }
+  .is-running .rule::after { opacity: 1; animation: crawl 1.35s linear infinite; }
+  .is-running .rule::before { transform: scaleX(0); }
+  @keyframes crawl { to { left: 100%; } }
+
+  /* --- controls ------------------------------------------------------- */
+  .controls { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  button {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 550;
+    color: var(--card);
+    background: var(--ink);
+    border: 0;
+    border-radius: 2px;
+    padding: 13px 26px;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+  button:hover:not(:disabled) { background: var(--ember); }
+  button:disabled { opacity: .45; cursor: default; }
+  :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  .status {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--slate);
+  }
+  .status b { color: var(--ember); font-weight: 500; }
+
+  /* --- report --------------------------------------------------------- */
+  .report {
+    margin-top: 56px;
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 3px;
+    padding: 32px 34px;
+  }
+  .report[hidden] { display: none; }
+  .report-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--hair);
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .report-head h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--slate);
+    font-weight: 500;
+    margin: 0;
+  }
+  .source {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--moss);
+    word-break: break-all;
+  }
+  .body p { margin: 0 0 14px; }
+  .body ul { margin: 0 0 14px; padding-left: 20px; }
+  .body li { margin-bottom: 8px; }
+  .body strong { font-weight: 620; }
+  .report.is-error { border-color: var(--ember); }
+  .report.is-error .source { color: var(--ember); }
+  .report.is-error .body { font-family: var(--mono); font-size: 13px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .is-running .rule::after { opacity: 1; left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">CrewAI &middot; Firecrawl</p>
+  <h1>Web Research Analyst</h1>
+  <p class="standfirst">
+    Give the analyst a page. It scrapes the content, reads it, and writes back
+    the main points in plain language.
+  </p>
+
+  <form id="form">
+    <div class="field">
+      <label for="url">Page to read</label>
+      <input id="url" type="url" required spellcheck="false"
+             placeholder="https://www.firecrawl.dev" value="https://www.firecrawl.dev">
+      <div class="rule"></div>
+    </div>
+    <div class="controls">
+      <button id="go" type="submit">Read this page</button>
+      <span class="status" id="status"></span>
+    </div>
+  </form>
+
+  <section class="report" id="report" hidden>
+    <div class="report-head">
+      <h2 id="reportTitle">Report</h2>
+      <span class="source" id="source"></span>
+    </div>
+    <div class="body" id="body"></div>
+  </section>
+</main>
+
+<script>
+const form = document.getElementById('form');
+const url = document.getElementById('url');
+const go = document.getElementById('go');
+const status = document.getElementById('status');
+const report = document.getElementById('report');
+const reportTitle = document.getElementById('reportTitle');
+const source = document.getElementById('source');
+const body = document.getElementById('body');
+let timer;
+
+// Just enough markdown for what the agent returns: bullets and bold.
+function render(text) {
+  const esc = text.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const html = [];
+  let list = false;
+  for (const line of esc.split('\n')) {
+    const t = line.trim();
+    const bullet = t.match(/^[-*]\s+(.*)/);
+    if (bullet) {
+      if (!list) { html.push('<ul>'); list = true; }
+      html.push(`<li>${bullet[1]}</li>`);
+    } else {
+      if (list) { html.push('</ul>'); list = false; }
+      if (t) html.push(`<p>${t}</p>`);
+    }
+  }
+  if (list) html.push('</ul>');
+  return html.join('').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function startClock() {
+  const t0 = Date.now();
+  const tick = () => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    status.innerHTML = `<b>Reading</b> &nbsp;${String(Math.floor(s / 60))}:${String(s % 60).padStart(2, '0')} &nbsp;&middot;&nbsp; usually 30&ndash;90s`;
+  };
+  tick();
+  timer = setInterval(tick, 1000);
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const target = url.value.trim();
+
+  document.body.classList.add('is-running');
+  go.disabled = true;
+  report.hidden = true;
+  startClock();
+
+  try {
+    const res = await fetch('/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: target })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`);
+
+    report.classList.remove('is-error');
+    reportTitle.textContent = 'Report';
+    source.textContent = target;
+    body.innerHTML = render(data.summary);
+  } catch (err) {
+    report.classList.add('is-error');
+    reportTitle.textContent = "Couldn't read that page";
+    source.textContent = target;
+    body.textContent = err.message;
+  } finally {
+    clearInterval(timer);
+    status.textContent = '';
+    document.body.classList.remove('is-running');
+    go.disabled = false;
+    report.hidden = false;
+    report.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+});
+</script>
+</body>
+</html>
