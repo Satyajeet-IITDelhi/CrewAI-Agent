@@ -5,6 +5,10 @@ crewai[litellm]>=0.86.0
 crewai-tools>=0.25.0
 firecrawl-py>=1.6.0
 python-dotenv>=1.0.0
+# Linux-only: supplies a modern SQLite for chromadb (pulled in by crewai), whose
+# minimum of 3.35 the Azure App Service image does not meet. See the shim at the
+# top of main.py. No wheel exists for Windows, hence the marker.
+pysqlite3-binary>=0.5.0; sys_platform == "linux"
 fastapi>=0.115.0
 uvicorn>=0.30.0
 gunicorn>=22.0.0

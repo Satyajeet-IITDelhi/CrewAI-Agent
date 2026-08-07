@@ -10,7 +10,21 @@ Run locally:  uvicorn main:app --reload
 """
 
 import os
+import sys
 from functools import lru_cache
+
+# --- sqlite3 shim for Azure App Service. MUST run before importing crewai.
+# CrewAI imports chromadb at module load, and chromadb requires sqlite3 >= 3.35.
+# The App Service Python 3.12 image ships an older system sqlite3, so the worker
+# dies on import with "unsupported version of sqlite3". pysqlite3-binary bundles a
+# current SQLite; swapping it into sys.modules makes chromadb pick it up. Wrapped
+# in try/except because the wheel is Linux-only -- on Windows/macOS the stdlib
+# sqlite3 is already new enough and this is a no-op.
+try:
+    __import__("pysqlite3")
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+except ImportError:
+    pass
 
 from crewai import Agent, Crew, Process, Task
 from fastapi import FastAPI, HTTPException
