@@ -124,7 +124,13 @@ def make_scrape_tool():
             result = super()._run(url)
             text = getattr(result, "markdown", None) or str(result)
             if len(text) > MAX_SCRAPE_CHARS:
-                text = text[:MAX_SCRAPE_CHARS] + "\n\n[... page truncated ...]"
+                # Wording matters: a bare "truncated" note made the agent re-scrape the
+                # same URL looking for the rest, pushing runs past the MCP gateway's
+                # ~50 s timeout.
+                text = text[:MAX_SCRAPE_CHARS] + (
+                    "\n\n[End of scraped content. This is all the content available "
+                    "for this page; do not scrape it again. Write the summary now.]"
+                )
             return text
 
     return TrimmedFirecrawlScrapeTool()
