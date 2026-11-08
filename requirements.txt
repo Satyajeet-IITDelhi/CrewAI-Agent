@@ -4,7 +4,8 @@
 #
 # Pinned to the versions verified locally: unpinned, each Azure build pulled the
 # newest crewai, and crewai 1.15.37's build came up without LiteLLM installed.
-crewai[litellm]==1.15.11
+# [azure-ai-inference] extra: CrewAI's native Azure OpenAI provider (LLM_PROVIDER=azure).
+crewai[litellm,azure-ai-inference]==1.15.11
 crewai-tools==1.15.11
 litellm==1.96.0
 firecrawl-py==4.34.0

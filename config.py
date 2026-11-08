@@ -3,8 +3,9 @@ Shared configuration for all three CrewAI demos.
 
 - Keys are loaded from a local .env file (see .env.example). The Firecrawl key
   falls back to instructions.txt if not found in the environment.
-- The LLM that powers every agent is pluggable. Two providers are wired up:
-    * "groq"      -> Llama 3.3 70B via Groq (fast, free tier)  [DEFAULT]
+- The LLM that powers every agent is pluggable. Three providers are wired up:
+    * "groq"      -> gpt-oss-120b via Groq (free tier: 8K tokens/min)  [DEFAULT]
+    * "azure"     -> Azure OpenAI deployment (gpt-4.1-mini), pay-per-use
     * "anthropic" -> Claude Opus 4.8 (most capable, paid)
   Pick one with LLM_PROVIDER in .env. Firecrawl scrapes the web; the LLM does the
   reasoning — they are two different services with two different keys.
@@ -42,12 +43,18 @@ try:
 except Exception:  # pragma: no cover - defensive; never block startup on the shim
     pass
 
-# Which LLM provider to use: "groq" (default) or "anthropic".
+# Which LLM provider to use: "groq" (default), "azure" or "anthropic".
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
 
-# Model strings carry a provider prefix because CrewAI routes through LiteLLM.
+# Model strings carry a provider prefix so CrewAI can route them.
 GROQ_MODEL = "groq/openai/gpt-oss-120b"  # swap for e.g. groq/llama-3.1-8b-instant
 CLAUDE_MODEL = "anthropic/claude-opus-4-8"   # or anthropic/claude-sonnet-4-6
+# Azure OpenAI: the part after "azure/" is the *deployment* name in your resource.
+# Project-specific AZURE_LLM_* names on purpose: the generic AZURE_OPENAI_* variables
+# are often already set machine-wide for other projects, and .env never overrides
+# existing environment variables.
+AZURE_DEPLOYMENT = os.getenv("AZURE_LLM_DEPLOYMENT", "gpt-4.1-mini")
+AZURE_API_VERSION = os.getenv("AZURE_LLM_API_VERSION", "2024-10-21")
 
 
 def load_firecrawl_key() -> str:
@@ -88,8 +95,33 @@ def get_llm() -> LLM:
         )
         return LLM(model=GROQ_MODEL, api_key=api_key)
 
+    if LLM_PROVIDER == "azure":
+        api_key = os.getenv("AZURE_LLM_API_KEY")
+        _require_key(
+            api_key,
+            name="AZURE_LLM_API_KEY",
+            placeholder="your-azure-openai-key",
+            console="Azure portal > your Foundry/OpenAI resource > Keys and Endpoint",
+        )
+        endpoint = os.getenv("AZURE_LLM_ENDPOINT")
+        _require_key(
+            endpoint,
+            name="AZURE_LLM_ENDPOINT",
+            placeholder="https://your-resource.openai.azure.com/",
+            console="Azure portal > your Foundry/OpenAI resource > Keys and Endpoint",
+        )
+        # Native Azure provider (needs crewai[azure-ai-inference]); it takes
+        # `endpoint`, not `base_url`.
+        return LLM(
+            model=f"azure/{AZURE_DEPLOYMENT}",
+            api_key=api_key,
+            endpoint=endpoint,
+            api_version=AZURE_API_VERSION,
+        )
+
     raise RuntimeError(
-        f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. Set it to 'groq' or 'anthropic' in .env."
+        f"Unknown LLM_PROVIDER={LLM_PROVIDER!r}. "
+        "Set it to 'groq', 'azure' or 'anthropic' in .env."
     )
 
 
@@ -108,11 +140,12 @@ def _require_key(value: str | None, *, name: str, placeholder: str, console: str
         )
 
 
-# Groq's free tier allows 8,000 tokens per minute on gpt-oss-120b. A full page can be
-# 15K+ tokens, so cap the scraped text. Scraped markdown is link-heavy (~2-2.5 chars per
-# token), so 6,000 chars ≈ 2.5-3K tokens, leaving room for the agent's prompt, its
-# reasoning history and the answer. 12,000 still overflowed on Azure (10.9K tokens).
-MAX_SCRAPE_CHARS = 6_000
+# Cap the scraped text so it fits the LLM's token budget.
+# - Groq free tier: 8,000 tokens/min on gpt-oss-120b. Scraped markdown is link-heavy
+#   (~2-2.5 chars per token), so 6,000 chars ≈ 2.5-3K tokens, leaving room for the
+#   prompt, reasoning history and answer (12,000 overflowed at 10.9K tokens).
+# - Azure OpenAI / Anthropic: far larger limits, so keep much more of the page.
+MAX_SCRAPE_CHARS = 6_000 if LLM_PROVIDER == "groq" else 20_000
 
 
 def make_scrape_tool():
