@@ -31,7 +31,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from config import get_llm, load_firecrawl_key
+from config import get_llm, load_firecrawl_key, make_scrape_tool
 
 app = FastAPI(title="CrewAI Web Research API", version="1.0.0")
 
@@ -51,7 +51,6 @@ def get_crew() -> Crew:
     instead of returning a readable error from the endpoint.
     """
     load_firecrawl_key()
-    from crewai_tools import FirecrawlScrapeWebsiteTool
 
     analyst = Agent(
         role="Web Research Analyst",
@@ -60,7 +59,7 @@ def get_crew() -> Crew:
             "You are a meticulous analyst who scrapes web pages and turns dense "
             "content into tight, accurate summaries that anyone can understand."
         ),
-        tools=[FirecrawlScrapeWebsiteTool()],
+        tools=[make_scrape_tool()],
         llm=get_llm(),
         verbose=True,
     )

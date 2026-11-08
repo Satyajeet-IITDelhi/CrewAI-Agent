@@ -46,7 +46,7 @@ except Exception:  # pragma: no cover - defensive; never block startup on the sh
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
 
 # Model strings carry a provider prefix because CrewAI routes through LiteLLM.
-GROQ_MODEL = "groq/llama-3.3-70b-versatile"  # swap for e.g. groq/llama-3.1-8b-instant
+GROQ_MODEL = "groq/openai/gpt-oss-120b"  # swap for e.g. groq/llama-3.1-8b-instant
 CLAUDE_MODEL = "anthropic/claude-opus-4-8"   # or anthropic/claude-sonnet-4-6
 
 
@@ -106,3 +106,24 @@ def _require_key(value: str | None, *, name: str, placeholder: str, console: str
             f"{name} is still the placeholder value. Edit .env and put your real key "
             f"in place of '{placeholder}'."
         )
+
+
+# Groq's free tier allows 8,000 tokens per minute on gpt-oss-120b. A full page can be
+# 15K+ tokens, so cap the scraped text. ~4 characters per token: 12,000 chars ≈ 3K tokens,
+# which leaves room for the agent's prompt and answer.
+MAX_SCRAPE_CHARS = 12_000
+
+
+def make_scrape_tool():
+    """Firecrawl scrape tool that truncates long pages to fit the LLM's token budget."""
+    from crewai_tools import FirecrawlScrapeWebsiteTool
+
+    class TrimmedFirecrawlScrapeTool(FirecrawlScrapeWebsiteTool):
+        def _run(self, url: str):
+            result = super()._run(url)
+            text = getattr(result, "markdown", None) or str(result)
+            if len(text) > MAX_SCRAPE_CHARS:
+                text = text[:MAX_SCRAPE_CHARS] + "\n\n[... page truncated ...]"
+            return text
+
+    return TrimmedFirecrawlScrapeTool()

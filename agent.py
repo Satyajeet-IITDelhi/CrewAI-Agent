@@ -12,13 +12,13 @@ Run:  python agent.py
 """
 
 from crewai import Agent, Crew, Process, Task
-from crewai_tools import FirecrawlScrapeWebsiteTool
 
-from config import get_llm, load_firecrawl_key
+from config import get_llm, load_firecrawl_key, make_scrape_tool
 
-# 1. Make sure the Firecrawl key is available, then build the scrape tool.
+# 1. Make sure the Firecrawl key is available, then build the scrape tool
+#    (truncates long pages so they fit the LLM's token budget).
 load_firecrawl_key()
-scrape_tool = FirecrawlScrapeWebsiteTool()
+scrape_tool = make_scrape_tool()
 
 # 2. The reasoning brain for the agent.
 llm = get_llm()

@@ -1,0 +1,63 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Web Research Analyst API",
+    "version": "1.0.0",
+    "description": "CrewAI Web Research Analyst: scrapes a web page with Firecrawl and summarizes it. Upload this file in Azure portal > Web App > AI (preview) > MCP servers > Create MCP server. App Service built-in MCP needs OpenAPI 3.0.x; FastAPI's /openapi.json is 3.1, so this file is maintained by hand."
+  },
+  "paths": {
+    "/summarize": {
+      "post": {
+        "operationId": "summarize_web_page",
+        "summary": "Scrape a web page and return a plain-language summary",
+        "description": "Runs the CrewAI Web Research Analyst agent: it scrapes the given URL with Firecrawl and returns a short report with a one-sentence description, 3 to 5 key points, and any notable links or calls to action. A run can take a minute or more.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "Full URL of the page to summarize, for example https://www.firecrawl.dev"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The summary report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string", "description": "The URL that was summarized" },
+                    "summary": { "type": "string", "description": "The agent's report" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The crew run failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": { "type": "string", "description": "Error message" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
