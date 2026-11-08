@@ -109,9 +109,10 @@ def _require_key(value: str | None, *, name: str, placeholder: str, console: str
 
 
 # Groq's free tier allows 8,000 tokens per minute on gpt-oss-120b. A full page can be
-# 15K+ tokens, so cap the scraped text. ~4 characters per token: 12,000 chars ≈ 3K tokens,
-# which leaves room for the agent's prompt and answer.
-MAX_SCRAPE_CHARS = 12_000
+# 15K+ tokens, so cap the scraped text. Scraped markdown is link-heavy (~2-2.5 chars per
+# token), so 6,000 chars ≈ 2.5-3K tokens, leaving room for the agent's prompt, its
+# reasoning history and the answer. 12,000 still overflowed on Azure (10.9K tokens).
+MAX_SCRAPE_CHARS = 6_000
 
 
 def make_scrape_tool():
